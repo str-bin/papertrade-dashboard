@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="模拟盘">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Meme 模拟盘看板</title>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--line:#30363d;--fg:#e6edf3;--mut:#8b949e;--up:#3fb950;--dn:#f85149;--warn:#d29922;--acc:#58a6ff}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 -apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:560px;margin:0 auto;padding:12px 12px calc(24px + env(safe-area-inset-bottom))}
+header{display:flex;justify-content:space-between;align-items:center;padding:4px 2px 10px}
+h1{font-size:18px;margin:0}h2{font-size:16px;margin:18px 2px 8px;display:flex;justify-content:space-between;align-items:baseline}h2 small{color:var(--mut);font-weight:400;font-size:12px}
+.tag{font-size:11px;padding:2px 7px;border-radius:10px;background:#21262d;color:var(--mut);border:1px solid var(--line)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.big{font-size:38px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums;line-height:1.1}
+.lbl{color:var(--mut);font-size:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px}
+.grid .v{font-size:19px;font-weight:650;font-variant-numeric:tabular-nums}
+.up{color:var(--up)}.dn{color:var(--dn)}.mut{color:var(--mut)}
+.bar{height:10px;background:#21262d;border-radius:6px;overflow:hidden;margin:6px 0 3px;position:relative}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#238636,#3fb950);border-radius:6px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sym{font-size:18px;font-weight:700}.chain{font-size:11px;padding:1px 6px;border-radius:6px;background:#1f2a3a;color:var(--acc);margin-left:6px;vertical-align:middle;text-transform:uppercase}
+.pct{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:8px;font-size:13px}.kv span{color:var(--mut)}.kv b{font-weight:600;font-variant-numeric:tabular-nums}
+details{margin-top:8px;font-size:13px}summary{color:var(--acc);cursor:pointer;outline:none}details p{margin:6px 0 0;color:#c9d1d9;word-break:break-all;white-space:pre-wrap}
+.links{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}.links a{font-size:13px;color:var(--acc);text-decoration:none;border:1px solid var(--line);padding:5px 10px;border-radius:8px;background:#0d1117}
+.warn{background:#3b2300;border:1px solid var(--warn);color:#f0c674;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:14px;display:none}
+.item{padding:10px 0;border-top:1px solid var(--line)}.item:first-child{border-top:0;padding-top:0}
+.item .r{font-size:12px;color:var(--mut);margin-top:3px;word-break:break-all}
+canvas{width:100%;height:210px;display:block}
+.empty{color:var(--mut);text-align:center;padding:16px 0}
+footer{color:var(--mut);font-size:12px;text-align:center;margin-top:20px;line-height:1.7}
+button{background:#21262d;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:12px}
+.more{display:block;width:100%;margin-top:8px;padding:8px}
+pre{white-space:pre-wrap;word-break:break-all;font-size:12px;color:#c9d1d9;margin:6px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>🐸 Meme 模拟盘</h1><span class="tag" id="upd">加载中…</span></header>
+<div class="warn" id="stale"></div>
+
+<div class="card">
+  <div class="lbl">总权益 (U)</div>
+  <div class="row" style="align-items:flex-end"><div class="big" id="eq">—</div><div style="text-align:right"><div class="lbl">总盈亏</div><div class="pct" id="tp">—</div></div></div>
+  <div class="grid">
+    <div><div class="lbl">今日盈亏</div><div class="v" id="td">—</div></div>
+    <div><div class="lbl">胜率</div><div class="v" id="wr">—</div></div>
+    <div><div class="lbl">最大回撤</div><div class="v dn" id="dd">—</div></div>
+    <div><div class="lbl">现金</div><div class="v" id="cash">—</div></div>
+    <div><div class="lbl">持仓市值</div><div class="v" id="pv">—</div></div>
+    <div><div class="lbl">已实现/浮动</div><div class="v" id="ru" style="font-size:15px">—</div></div>
+  </div>
+  <div style="margin-top:14px"><div class="row lbl"><span>目标进度 1000 → 2000</span><span id="prog">—</span></div><div class="bar"><i id="progbar" style="width:0"></i></div></div>
+  <div class="lbl" id="status" style="margin-top:6px"></div>
+</div>
+
+<h2>当前持仓 <small id="poscnt"></small></h2>
+<div id="pos"></div>
+
+<h2>权益曲线 <small>虚线: 1000 起点 / 2000 目标</small></h2>
+<div class="card" style="padding:10px"><canvas id="chart"></canvas></div>
+
+<h2>已平仓 <small id="clcnt"></small></h2>
+<div class="card" id="closed"></div>
+
+<h2>错过的币 <small>被拒后大涨</small></h2>
+<div class="card" id="missed"></div>
+
+<h2>最新日报</h2>
+<div class="card"><details><summary id="repname">展开</summary><pre id="report"></pre></details></div>
+
+<footer>⚠️ 模拟盘，非投资建议。全部为纸上交易，无真实资金。<br>时间均为 UTC+8 · 每 60 秒自动刷新 · <button onclick="load()">立即刷新</button></footer>
+</div>
+<script>
+let D=null,showAll=false;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sg=(v,d=2)=>v==null||isNaN(v)?'—':(v>0?'+':'')+Number(v).toFixed(d);
+const cls=v=>v>0?'up':v<0?'dn':'mut';
+function px(v){if(v==null)return'—';v=Number(v);if(v===0)return'0';const a=Math.abs(v);if(a>=1000)return v.toLocaleString('en-US',{maximumFractionDigits:2});if(a>=1)return v.toFixed(4);const e=Math.floor(Math.log10(a));return v.toFixed(Math.min(12,-e+3));}
+function t8(s){return s?String(s).slice(5,16):'—'}
+function parse8(s){return new Date(String(s).replace(' ','T')+'+08:00')}
+function ago(s){const m=(Date.now()-parse8(s))/60000;if(m<1)return'刚刚';if(m<60)return Math.floor(m)+' 分钟前';return (m/60).toFixed(1)+' 小时前'}
+function lnk(l){let h='';if(l&&l.dexscreener)h+=`<a href="${esc(l.dexscreener)}" target="_blank" rel="noopener">DexScreener ↗</a>`;if(l&&l.gmgn)h+=`<a href="${esc(l.gmgn)}" target="_blank" rel="noopener">GMGN ↗</a>`;return h?`<div class="links">${h}</div>`:''}
+
+async function load(){
+  try{const r=await fetch('data.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error(r.status);D=await r.json();render();}
+  catch(e){$('stale').style.display='block';$('stale').textContent='⚠️ 数据加载失败：'+e.message+'（将自动重试）';}
+}
+function checkStale(){
+  if(!D)return;const m=(Date.now()-parse8(D.data_time))/60000;
+  $('upd').textContent='更新 '+t8(D.data_time)+' · '+ago(D.data_time);
+  const w=$('stale');
+  if(m>20){w.style.display='block';w.textContent=`⚠️ 数据已 ${Math.floor(m)} 分钟未更新（>20 分钟），后台循环可能已停止。最后数据时间 ${D.data_time} (UTC+8)`;}
+  else w.style.display='none';
+}
+function render(){
+  const s=D.summary;
+  $('eq').textContent=s.equity.toFixed(2);
+  $('tp').innerHTML=`<span class="${cls(s.total_pnl)}">${sg(s.total_pnl)}<span style="font-size:14px"> (${sg(s.total_pnl_pct)}%)</span></span>`;
+  $('td').innerHTML=`<span class="${cls(s.today_pnl)}">${sg(s.today_pnl)}</span>`;
+  $('wr').textContent=s.win_rate==null?'—':s.win_rate.toFixed(1)+'%';$('wr').title=`${s.wins}/${s.closed_trades}`;
+  $('wr').insertAdjacentHTML('beforeend',`<div class="lbl">${s.wins}胜/${s.closed_trades}笔</div>`);
+  $('dd').textContent=s.max_drawdown_pct.toFixed(2)+'%';
+  $('cash').textContent=s.cash.toFixed(2);$('pv').textContent=s.positions_value.toFixed(2);
+  $('ru').innerHTML=`<span class="${cls(s.realized)}">${sg(s.realized,1)}</span> / <span class="${cls(s.unrealized)}">${sg(s.unrealized,1)}</span>`;
+  const p=Math.max(0,Math.min(100,(s.equity-D.start)/(D.target-D.start)*100));
+  $('prog').textContent=s.equity<D.start?`0%（低于起点 ${(s.equity-D.start).toFixed(0)} U）`:`${p.toFixed(1)}%（还差 ${(D.target-s.equity).toFixed(0)} U）`;$('progbar').style.width=p+'%';
+  $('status').innerHTML=`今日开仓 ${s.entries_today??0} 笔`+(s.halted?' · <span class="dn">日亏硬停中</span>':s.soft_halt?' · <span style="color:var(--warn)">日亏软停（降仓位）</span>':'')+` · 扫描 ${t8(D.last_scan)} · tick ${t8(D.last_tick)}`;
+  // positions
+  $('poscnt').textContent=D.positions.length+' 个';
+  $('pos').innerHTML=D.positions.length?D.positions.map(q=>`<div class="card">
+    <div class="row"><div><span class="sym">${esc(q.symbol)}</span><span class="chain">${esc(q.chain)}</span>${q.halt_override?'<span class="chain" style="color:var(--warn);background:#2d2300">软停仓</span>':''}</div><div class="pct ${cls(q.unreal_pct)}">${sg(q.unreal_pct)}%</div></div>
+    <div class="kv"><span>入场时间</span><b>${t8(q.entry_time)}</b><span>仓位</span><b>${q.size.toFixed(2)} U → ${q.value.toFixed(2)}</b>
+    <span>入场价</span><b>${px(q.entry_price)}</b><span>现价</span><b>${px(q.price)}</b>
+    <span>评分</span><b>${q.score??'—'} ${esc(q.grade||'')}</b><span>已止盈档</span><b>${q.tp_done??0}</b></div>
+    <details><summary>入场理由</summary><p>${esc(q.reason)}</p><p class="mut">合约 ${esc(q.address)}</p></details>${lnk(q.links)}</div>`).join(''):'<div class="card empty">空仓</div>';
+  // closed
+  $('clcnt').textContent=D.closed.length+' 笔';
+  const cl=showAll?D.closed:D.closed.slice(0,10);
+  $('closed').innerHTML=D.closed.length?cl.map(c=>`<div class="item"><div class="row"><div><b>${esc(c.symbol)}</b><span class="chain">${esc(c.chain)}</span></div><div class="${cls(c.pnl)}" style="font-weight:700;font-variant-numeric:tabular-nums">${sg(c.pnl)} U <small>(${c.pnl_pct==null?'—':sg(c.pnl_pct)+'%'})</small></div></div>
+    <div class="r">${t8(c.entry_time)} → ${t8(c.exit_time)} · 仓位 ${c.size??'—'}U · 评分 ${c.score??'—'}</div><div class="r">出场：${esc(c.exit_reason)}</div>
+    <details><summary>详情</summary><p>${esc(c.exits)}</p><p>${esc(c.reason)}</p></details>${lnk(c.links)}</div>`).join('')+(D.closed.length>10?`<button class="more" onclick="showAll=!showAll;render()">${showAll?'收起':'显示全部 '+D.closed.length+' 笔'}</button>`:''):'<div class="empty">暂无平仓</div>';
+  // missed
+  $('missed').innerHTML=D.missed.length?D.missed.slice(0,10).map(m=>`<div class="item"><div class="row"><div><b>${esc(m.symbol)}</b><span class="chain">${esc(m.chain)}</span> <span class="mut" style="font-size:12px">${esc(m.grade||'')}级</span></div><div class="up" style="font-weight:700">${sg(m.gain_pct,1)}% <small class="mut">${esc(m.node)}</small></div></div>
+    <div class="r">${t8(m.time)} · ${px(m.first_price)} → ${px(m.price)}</div><details><summary>拦截规则</summary><p>${esc(m.blocked_by)}</p></details>${lnk(m.links)}</div>`).join(''):'<div class="empty">暂无</div>';
+  if(D.report){$('repname').textContent=D.report.name;$('report').textContent=D.report.text;}
+  drawChart();checkStale();
+}
+function drawChart(){
+  const c=$('chart'),dpr=window.devicePixelRatio||1,W=c.clientWidth,H=c.clientHeight;c.width=W*dpr;c.height=H*dpr;
+  const g=c.getContext('2d');g.scale(dpr,dpr);g.clearRect(0,0,W,H);
+  const pts=D.equity_curve.slice();pts.push([D.data_time,D.summary.equity]);
+  if(pts.length<2){g.fillStyle='#8b949e';g.fillText('数据不足',W/2-20,H/2);return}
+  const ts=pts.map(p=>parse8(p[0]).getTime()),vs=pts.map(p=>p[1]);
+  let lo=Math.min(...vs,D.start),hi=Math.max(...vs,D.start);
+  // 若接近目标则显示 2000 线；否则在顶部标注
+  const showT=hi>=D.start+(D.target-D.start)*0.5;if(showT)hi=D.target;
+  const pad=(hi-lo)*0.08||10;lo-=pad;hi+=pad;
+  const L=42,R=8,T=10,B=22,x=t=>L+(t-ts[0])/((ts[ts.length-1]-ts[0])||1)*(W-L-R),y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
+  g.font='11px sans-serif';g.fillStyle='#8b949e';g.strokeStyle='#21262d';g.lineWidth=1;
+  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,yy=y(v);g.beginPath();g.moveTo(L,yy);g.lineTo(W-R,yy);g.stroke();g.fillText(v.toFixed(0),2,yy+4)}
+  const hl=(v,col,txt)=>{if(v<lo||v>hi)return;g.save();g.setLineDash([5,4]);g.strokeStyle=col;g.beginPath();g.moveTo(L,y(v));g.lineTo(W-R,y(v));g.stroke();g.restore();g.fillStyle=col;g.fillText(txt,W-R-34,y(v)-4)};
+  hl(D.start,'#8b949e','1000');hl(D.target,'#3fb950','2000 🎯');
+  if(!showT){g.fillStyle='#3fb950';g.fillText('↑ 目标 2000',W-R-70,T+10)}
+  const last=vs[vs.length-1],col=last>=D.start?'#3fb950':'#f85149';
+  g.beginPath();pts.forEach((p,i)=>{const X=x(ts[i]),Y=y(vs[i]);i?g.lineTo(X,Y):g.moveTo(X,Y)});
+  g.strokeStyle=col;g.lineWidth=2;g.stroke();
+  g.lineTo(x(ts[ts.length-1]),y(lo));g.lineTo(x(ts[0]),y(lo));g.closePath();
+  const gr=g.createLinearGradient(0,T,0,H-B);gr.addColorStop(0,col+'55');gr.addColorStop(1,col+'00');g.fillStyle=gr;g.fill();
+  g.fillStyle='#8b949e';const d0=new Date(ts[0]+8*3600e3),d1=new Date(ts[ts.length-1]+8*3600e3);
+  const f=d=>d.toISOString().slice(5,16).replace('T',' ');g.fillText(f(d0),L,H-6);const s1=f(d1);g.fillText(s1,W-R-g.measureText(s1).width,H-6);
+}
+load();setInterval(load,60000);setInterval(checkStale,15000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
+window.addEventListener('resize',()=>D&&drawChart());
+</script>
+</body>
+</html>
