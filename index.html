@@ -122,7 +122,8 @@ function render(){
     <div class="row"><div><span class="sym">${esc(q.symbol)}</span><span class="chain">${esc(q.chain)}</span>${q.halt_override?'<span class="chain" style="color:var(--warn);background:#2d2300">软停仓</span>':''}</div><div class="pct ${cls(q.unreal_pct)}">${sg(q.unreal_pct)}%</div></div>
     <div class="kv"><span>入场时间</span><b>${t8(q.entry_time)}</b><span>仓位</span><b>${q.size.toFixed(2)} U → ${q.value.toFixed(2)}</b>
     <span>入场价</span><b>${px(q.entry_price)}</b><span>现价</span><b>${px(q.price)}</b>
-    <span>评分</span><b>${q.score??'—'} ${esc(q.grade||'')}</b><span>已止盈档</span><b>${q.tp_done??0}</b></div>
+    <span>评分</span><b>${q.score??'—'} ${esc(q.grade||'')}</b><span>已止盈档</span><b>${q.tp_done??0}</b>
+    <span>社交</span><b>${esc(q.social||'无数据(中性)')}</b></div>
     <details><summary>入场理由</summary><p>${esc(q.reason)}</p><p class="mut">合约 ${esc(q.address)}</p></details>${lnk(q.links)}</div>`).join(''):'<div class="card empty">空仓</div>';
   // closed
   $('clcnt').textContent=D.closed.length+' 笔';
